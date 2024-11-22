@@ -291,6 +291,14 @@ class IFunnyAPI:
 
 class PostBot:
     def __init__(self):
+        # runtime stuff
+        self.TAKE_IT_EASY = True
+        self.start_time = time.time()
+        self.running_event = threading.Event()
+        self.running_event.set()
+        self.threads = []
+        self.kill_key = "insert"
+
         # api stuff
         self.ifunny = IFunnyAPI()
 
@@ -308,17 +316,13 @@ class PostBot:
         self.image_scrape_thread_status = ""
         self.post_thread_status = ""
 
+        # wait times
         self.good_post_wait_time = 2 * 60 * 60  # 2 hours
         self.fail_post_wait_time = 5 * 60 * 60  # 5 hours
         self.good_get_images_wait_time = 0
         self.fail_get_images_wait_time = 120 * 60
 
-        # runtime stuff
-        self.start_time = time.time()
-        self.running_event = threading.Event()
-        self.running_event.set()  # initially running
-        self.threads = []
-        self.kill_key = "a"
+
 
     def stop(self):
         print(f"Stopping PostBot")
@@ -338,7 +342,7 @@ class PostBot:
                     print("Shutoff key pressed!")
                     self.stop()
                     break
-                time.sleep(0.1)
+                time.sleep(1)
             print("Done running keyboard-shutoff thread")
 
         t = threading.Thread(target=_to_wrap)
@@ -361,7 +365,7 @@ class PostBot:
                     if time_till_next_post < 0:
                         is_waiting = False
                     else:
-                        time.sleep(1)
+                        time.sleep(5 if self.TAKE_IT_EASY else 1)
                         continue
 
                 if self.ifunny.post_random_image() is not True:
@@ -427,7 +431,7 @@ class PostBot:
             print("Running print thread")
             while self.running_event.is_set():
                 print_stats()
-                time.sleep(0.95)
+                time.sleep(4.99 if self.TAKE_IT_EASY else 0.95)
             print("Done Running print thread")
 
         t = threading.Thread(target=_to_wrap)
@@ -449,6 +453,7 @@ class PostBot:
                     if time_left < 0:
                         is_waiting = False
                     else:
+                        time.sleep(5 if self.TAKE_IT_EASY else 0)
                         continue
 
                 image_count = len(os.listdir("images"))
