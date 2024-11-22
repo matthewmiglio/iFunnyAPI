@@ -360,7 +360,7 @@ class PostBot:
                     )
                     if time_till_next_post < 0:
                         is_waiting = False
-                    else: 
+                    else:
                         time.sleep(1)
                         continue
 
