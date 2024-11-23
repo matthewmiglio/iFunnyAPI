@@ -2,8 +2,9 @@ import requests
 import time
 import cv2
 import os
+from auth.community import get_random_community_bearer_token
 
-BEARER_TOKEN = "you need to fill this in before using the script"
+BEARER_TOKEN = get_random_community_bearer_token()
 request_timeout = 3600
 
 def fetch_collective_feed_images(limit=30):

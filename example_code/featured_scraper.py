@@ -2,10 +2,12 @@ import requests
 import os
 import time
 import cv2
+from auth.community import get_random_community_bearer_token
 
 
 request_timeout = 3600
-bearer_token = "you need to fill this in before using the script"
+
+BEARER_TOKEN = get_random_community_bearer_token()
 
 
 def fetch_featured_feed_images(limit=30):
@@ -13,7 +15,7 @@ def fetch_featured_feed_images(limit=30):
 
     headers = {
         "Accept": "video/mp4, image/jpeg, application/json",
-        "Authorization": f"Bearer {bearer_token}",  # Use your Bearer token
+        # "Authorization": f"Bearer {bearer_token}",  # Use your Bearer token
         "Accept-Encoding": "gzip, deflate, br",
         "Accept-Language": "en_US",
         "ApplicationState": "1",
