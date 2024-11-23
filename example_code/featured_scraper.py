@@ -5,7 +5,7 @@ import cv2
 
 
 request_timeout = 3600
-bearer_token = "you need to fill this in before using the script"
+# bearer_token = "you need to fill this in before using the script"
 
 
 def fetch_featured_feed_images(limit=30):
@@ -13,7 +13,7 @@ def fetch_featured_feed_images(limit=30):
 
     headers = {
         "Accept": "video/mp4, image/jpeg, application/json",
-        "Authorization": f"Bearer {bearer_token}",  # Use your Bearer token
+        # "Authorization": f"Bearer {bearer_token}",  # Use your Bearer token
         "Accept-Encoding": "gzip, deflate, br",
         "Accept-Language": "en_US",
         "ApplicationState": "1",
