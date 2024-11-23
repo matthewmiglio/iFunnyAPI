@@ -317,7 +317,7 @@ class PostBot:
         self.post_thread_status = ""
 
         # wait times
-        self.good_post_wait_time = 2 * 60 * 60  # 2 hours
+        self.good_post_wait_time = 1.5 * 60 * 60  # 2 hours
         self.fail_post_wait_time = 5 * 60 * 60  # 5 hours
         self.good_get_images_wait_time = 0
         self.fail_get_images_wait_time = 120 * 60
