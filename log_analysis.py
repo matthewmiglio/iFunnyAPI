@@ -52,7 +52,6 @@ def plot_logs(save = False):
         "featured_scrape_rate_limits",
         "collective_scrape_successfuls",
         "collective_scrape_rate_limits",
-        "community_bearer_featured_scrape_attempts",
     ]
 
     # Initialize the data list for rows
@@ -66,7 +65,6 @@ def plot_logs(save = False):
         "featured_scrape_rate_limit": 0,
         "collective_scrape_successful": 0,
         "collective_scrape_rate_limit": 0,
-        'community_bearer_featured_scrape_attempt': 0,
     }
 
     first_timestamp = None
@@ -104,9 +102,6 @@ def plot_logs(save = False):
                 ],
                 "collective_scrape_rate_limits": current_data_dict[
                     "collective_scrape_rate_limit"
-                ],
-                "community_bearer_featured_scrape_attempts": current_data_dict[
-                    "community_bearer_featured_scrape_attempt"
                 ],
             }
         )

@@ -8,8 +8,6 @@ import os
 import sys
 import datetime
 
-from auth.community import get_random_community_bearer_token
-
 
 class IFunnyAPI:
     def __init__(self):
@@ -54,11 +52,14 @@ class IFunnyAPI:
         if source == "collective":
             headers = {
                 "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+                # "Accept": "video/mp4, image/jpeg, application/json",
                 "Accept": "image/jpeg, application/json",
                 "Authorization": f"Bearer {self.bearer_token}",  # Your Bearer token
                 "Accept-Encoding": "gzip, deflate, br",
+                # "Accept-Language": "en_US",
                 "ApplicationState": "1",
                 "Ifunny-Project-Id": "iFunny",
+                # "User-Agent": "iFunny/10.7.11(24487) iPhone/15.6.1 (Apple; iPhone13,2)",
                 "Events-Info": '{"context":{"session":{"start":1732129706036}}}',  # Session info
             }
             url = "https://api.ifnapp.com/v4/feeds/collective"
@@ -68,26 +69,15 @@ class IFunnyAPI:
 
         elif source == "featured":
             headers = {
+                # "Accept": "video/mp4, image/jpeg, application/json",
                 "Accept": "image/jpeg, application/json",
                 "Authorization": f"Bearer {self.bearer_token}",  # Use your Bearer token
                 "Accept-Encoding": "gzip, deflate, br",
+                # "Accept-Language": "en_US",
                 "ApplicationState": "1",
                 "Ifunny-Project-Id": "iFunny",
-                "Events-Info": '{"context":{"session":{"start":1732132752448}}}',
-            }
-            url = "https://api.ifnapp.com/v4/feeds/featured"
-            response = requests.get(
-                url, headers=headers, params={"limit": limit}, timeout=60
-            )
-
-        elif source == "community_bearer_featured":
-            headers = {
-                "Accept": "image/jpeg, application/json",
-                "Authorization": f"Bearer {get_random_community_bearer_token()}",
-                "Accept-Encoding": "gzip, deflate, br",
-                "ApplicationState": "1",
-                "Ifunny-Project-Id": "iFunny",
-                "Events-Info": '{"context":{"session":{"start":1732132752448}}}',
+                # "User-Agent": "iFunny/10.7.11(24487) iPhone/15.6.1 (Apple; iPhone13,2)",
+                "Events-Info": '{"context":{"session":{"start":1732132752448}}}',  # Session info
             }
             url = "https://api.ifnapp.com/v4/feeds/featured"
             response = requests.get(
@@ -327,7 +317,7 @@ class PostBot:
         self.post_thread_status = ""
 
         # wait times
-        self.good_post_wait_time = 1.5 * 60 * 60  # 2 hours
+        self.good_post_wait_time = 2 * 60 * 60  # 2 hours
         self.fail_post_wait_time = 5 * 60 * 60  # 5 hours
         self.good_get_images_wait_time = 0
         self.fail_get_images_wait_time = 120 * 60
@@ -466,7 +456,6 @@ class PostBot:
                         time.sleep(5 if self.TAKE_IT_EASY else 0)
                         continue
 
-                #wait for image count to drop below threshold
                 image_count = len(os.listdir("images"))
                 self.logger.log(f"image_count {image_count}")
                 if image_count > self.image_count_lower_bound:
@@ -474,7 +463,6 @@ class PostBot:
                     time_of_next_scrape_attempt = time.time() + 60
                     continue
 
-                #try to scrape featured
                 self.logger.log("Featured_scrape_attempt")
                 self.image_scrape_thread_status = "Scraping featured..."
                 if (
@@ -486,22 +474,6 @@ class PostBot:
                     self.logger.log("featured_scrape_successful")
                     continue
 
-                #else featured must be limited, so try scraping featued with community token
-                self.logger.log("featured_scrape_rate_limit")
-                self.image_scrape_thread_status = "Failed to scrape featured..."
-                print("Featured scrape is limited. Moving to community bearer token...")
-                self.image_scrape_thread_status = "Scraping featued with community bearer token..."
-                self.logger.log("community_bearer_featured_scrape_attempt")
-                if (
-                    self.ifunny.get_images(
-                        "community_bearer_featured", self.image_scrape_limit, save=True
-                    )
-                    is not False
-                ):
-                    self.logger.log("community_bearer_featured_scrape_successful")
-                    continue
-
-                #else featured must be limited on main bearer AND community bearer, so try collective
                 self.logger.log("featured_scrape_rate_limit")
                 self.image_scrape_thread_status = "Failed to scrape featured..."
                 print("Featured scrape is limited. Moving to collective...")
@@ -516,7 +488,6 @@ class PostBot:
                     self.logger.log("collective_scrape_successful")
                     continue
 
-                #collective must be limited too, so wait
                 print("Failed to scrape collective!")
                 self.logger.log("collective_scrape_rate_limit")
                 self.image_scrape_thread_status = "Failed to scrape collective!"
