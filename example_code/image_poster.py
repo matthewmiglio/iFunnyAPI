@@ -2,6 +2,7 @@ import requests
 import os
 import random
 import time
+from auth.community import get_random_community_bearer_token
 
 
 request_timeout = 3600
