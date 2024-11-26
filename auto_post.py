@@ -1,6 +1,7 @@
 import keyboard
 import threading
 import cv2
+import numpy as np
 import requests
 import time
 import random
@@ -14,6 +15,9 @@ class IFunnyAPI:
         # api stuff
         self.bearer_token_path = r"bearer_token.txt"
         self.get_bearer_token()
+
+        # image history stuff
+        self.image_history = ImageHistory()
 
         # stats
         self.featured_scrapes = 0
@@ -222,7 +226,14 @@ class IFunnyAPI:
             cv2.imwrite(image_path, image)
 
         os.makedirs("images", exist_ok=True)
-        crop(save())
+        fp = save()
+        crop(fp)
+        if not self.image_history.image_is_unique(fp):
+            os.remove(fp)
+            return False
+
+        self.image_history.add_image_to_history(fp)
+        return True
 
     def post_random_image(self) -> bool:
         images_dir = r"images"
@@ -321,8 +332,6 @@ class PostBot:
         self.fail_post_wait_time = 5 * 60 * 60  # 5 hours
         self.good_get_images_wait_time = 0
         self.fail_get_images_wait_time = 120 * 60
-
-
 
     def stop(self):
         print(f"Stopping PostBot")
@@ -515,6 +524,151 @@ class PostBot:
         while self.running_event.is_set():
             time.sleep(1)
         self.stop()
+
+
+class ImageHistory:
+    def __init__(self):
+        self.IMAGE_EQUALITY_THRESHOLD = 0.9
+        self.image_history_path = r"image_history.txt"
+        self.colors = {
+            "AliceBlue": (240, 248, 255),
+            "AntiqueWhite": (250, 235, 215),
+            "Aqua": (0, 255, 255),
+            "Aquamarine": (127, 255, 212),
+            "Azure": (240, 255, 255),
+            "Beige": (245, 245, 220),
+            "Bisque": (255, 228, 196),
+            "Black": (0, 0, 0),
+            "BlanchedAlmond": (255, 235, 205),
+            "Blue": (0, 0, 255),
+            "BlueViolet": (138, 43, 226),
+            "Brown": (165, 42, 42),
+            "BurlyWood": (222, 184, 135),
+            "CadetBlue": (95, 158, 160),
+            "Chartreuse": (127, 255, 0),
+            "Chocolate": (210, 105, 30),
+            "Coral": (255, 127, 80),
+            "CornflowerBlue": (100, 149, 237),
+            "Cornsilk": (255, 248, 220),
+            "Crimson": (220, 20, 60),
+            "Cyan": (0, 255, 255),
+            "DarkBlue": (0, 0, 139),
+            "DarkCyan": (0, 139, 139),
+            "DarkGoldenRod": (184, 134, 11),
+            "DarkGray": (169, 169, 169),
+            "DarkGreen": (0, 100, 0),
+            "DarkKhaki": (189, 183, 107),
+            "DarkMagenta": (139, 0, 139),
+            "DarkOliveGreen": (85, 107, 47),
+            "DarkOrange": (255, 140, 0),
+            "DarkOrchid": (153, 50, 204),
+            "DarkRed": (139, 0, 0),
+            "DarkSalmon": (233, 150, 122),
+            "DarkSeaGreen": (143, 188, 143),
+            "DarkSlateBlue": (72, 61, 139),
+            "DarkSlateGray": (47, 79, 79),
+            "DarkTurquoise": (0, 206, 209),
+            "DarkViolet": (148, 0, 211),
+            "DeepPink": (255, 20, 147),
+            "DeepSkyBlue": (0, 191, 255),
+            "DimGray": (105, 105, 105),
+            "DodgerBlue": (30, 144, 255),
+            "FireBrick": (178, 34, 34),
+            "FloralWhite": (255, 250, 240),
+            "ForestGreen": (34, 139, 34),
+            "Fuchsia": (255, 0, 255),
+            "Gainsboro": (220, 220, 220),
+            "GhostWhite": (248, 248, 255),
+            "Gold": (255, 215, 0),
+            "GoldenRod": (218, 165, 32),
+        }
+        if not os.path.exists(self.image_history_path):
+            with open(self.image_history_path, "w") as file:
+                file.write("")
+
+    def add_image_to_history(self, image_path):
+        # open image
+        try:
+            image = cv2.imread(image_path)
+        except:
+            print(f"Failed to open this as an image: {image_path}")
+            return False
+
+        # make image string
+        uid = self.image2uid(image)
+
+        # add new image sting to image history list
+        try:
+            with open(self.image_history_path, "a") as file:
+                file.write(f"{uid}\n")
+                return True
+        except:
+            print(f"Error writing to this file: {self.image_history_path}!!")
+
+        return False
+
+    def image_strings_equal(self, image_string1: str, image_string2: str) -> float:
+        # Convert the image strings to lists of integers
+        counts1 = np.array(list(map(int, image_string1.split())))
+        counts2 = np.array(list(map(int, image_string2.split())))
+
+        # Ensure both vectors have the same length
+        if len(counts1) != len(counts2):
+            raise ValueError("Image strings must have the same number of color counts.")
+
+        # Calculate the Euclidean distance between the two vectors
+        distance = np.linalg.norm(counts1 - counts2)
+
+        # Calculate the similarity score (the lower the distance, the higher the similarity)
+        max_distance = np.linalg.norm(np.maximum(counts1, counts2))
+        similarity_score = 1 - (distance / max_distance)
+
+        if similarity_score > self.IMAGE_EQUALITY_THRESHOLD:
+            return True
+
+        return False
+
+    def image2uid(self, image: np.array) -> str:
+        # Initialize color counts
+        color_counts = {color: 0 for color in self.colors}
+
+        skip_amount = 30  # only look at every 10th pixel
+
+        # Iterate through each pixel in the image
+        for i, row in enumerate(image):
+            if i % skip_amount != 0:
+                continue
+            for j, pixel in enumerate(row):
+                if j % skip_amount != 0:
+                    continue
+                # print(f'Row: {i}, pixel: {j}')
+                closest_color = None
+                min_distance = float("inf")
+
+                # Calculate the Euclidean distance to each color
+                for color_name, color_value in self.colors.items():
+                    distance = np.linalg.norm(np.array(pixel) - np.array(color_value))
+                    if distance < min_distance:
+                        min_distance = distance
+                        closest_color = color_name
+
+                # Increment the count for the closest color
+                color_counts[closest_color] += 1
+
+        # Create the output string
+        color_string = " ".join(str(color_counts[color]) for color in self.colors)
+
+        return color_string
+
+    def image_is_unique(self, image_path):
+        this_image_string = self.image2uid(cv2.imread(image_path))
+        with open(self.image_history_path, "r") as file:
+            image_strings = [l.strip() for l in file.readlines()]
+            for stored_image_string in image_strings:
+                if self.image_strings_equal(this_image_string, stored_image_string):
+                    return False
+
+        return True
 
 
 class Logger:
