@@ -423,7 +423,7 @@ class PostBot:
                 "Scrapes (feat)": self.ifunny.featured_scrapes,
                 "Scrapes (total)": self.ifunny.collective_scrapes
                 + self.ifunny.featured_scrapes,
-                "Image history count":self.ifunny.image_history.get_image_history_count(),
+                "Image history count": self.ifunny.image_history.get_image_history_count(),
                 "Post timeouts": self.ifunny.post_rate_limits,
                 "Scrape timeouts": self.ifunny.scrape_rate_limits,
                 "Post thread:": self.post_thread_status,
@@ -612,11 +612,11 @@ class ImageHistory:
         try:
             with open(self.image_history_path, "r") as file:
                 lines = file.readlines()
-                lines = [l for l in lines if l != '\n' and l != ' ']
+                lines = [l for l in lines if l != "\n" and l != " "]
                 return len(lines)
         except:
             pass
-        
+
         return -1
 
     def image_strings_equal(self, image_string1: str, image_string2: str) -> float:
