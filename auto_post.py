@@ -306,8 +306,8 @@ class PostBot:
         self.logger = Logger()
 
         # bot stuff
-        self.image_count_lower_bound = 3
-        self.image_scrape_limit = 1
+        self.image_count_lower_bound = 200
+        self.image_scrape_limit = 100
         self.time_of_last_post = None
         self.time_of_last_collective_scrape = None
         self.time_of_last_featured_scrape = None
